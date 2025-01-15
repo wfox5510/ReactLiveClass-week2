@@ -9,75 +9,43 @@ const API_BASE = import.meta.env.VITE_BASE_URL;
 const API_PATH = import.meta.env.VITE_API_PATH;
 
 function App() {
-  const token = document.cookie.replace(
-    /(?:(?:^|.*;\s*)hexTokenWeek2\s*\=\s*([^;]*).*$)|^.*$/,
-    "$1"
-  );
-  // const uploadData = async ()=>{
-  //   console.log(API_BASE,API_PATH)
-  //   try{
-  //     await axios.post(`${API_BASE}/v2/api/${API_PATH}/admin/product`,{
-  //       data:{
-  //         category: "烤馬鈴薯",
-  //         content: "選用上等培根與新鮮馬鈴薯，搭配濃郁的起司，與柔滑的馬鈴薯餡料相得益彰。",
-  //         description: "每一口都能品味到培根的煙燻香氣與起司的濃厚風味，完美演繹的經典組合。",
-  //         imageUrl: "https://images.unsplash.com/photo-1665931040985-88ceff0fd38e?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  //         imagesUrl: [
-  //           "https://images.unsplash.com/photo-1645673197548-9adfa2ea55dc?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-  //         ],
-  //         is_enabled: 1,
-  //         origin_price: 90,
-  //         price: 90,
-  //         title: "培根起司馬鈴薯",
-  //         unit: "份"
-  //       }
-  //     },
-  //     {
-  //       headers: {
-  //         Authorization: token
-  //       }
-  //     })
-  //   }
-  //   catch(err){
-  //     console.log(err);
-  //   }
-  // }
-  const getProducts = async ()=>{
-    const res = await axios.get(`${API_BASE}/api/${API_PATH}/products/all`)
+  
+
+  const getProducts = async () => {
+    const res = await axios.get(
+      `${API_BASE}/v2/api/${API_PATH}/admin/products`
+    );
+    console.log(res.data);
     setProducts(res.data.products);
-  }
+  };
+
   const checkLogin = async () => {
-    try{
-      await axios.post(`${API_BASE}/api/user/check`, {},
-      {
-        headers: {
-          Authorization: token
-        },
-      });
-      alert("您已經成功登入")
+    try {
+      await axios.post(`${API_BASE}/v2/api/user/check`, {});
+      alert("您已經成功登入");
+    } catch (error) {
+      alert("尚未登入");
     }
-    catch(error){
-      alert("尚未登入")
-    }
-  }
+  };
   useEffect(() => {
     (async () => {
-      try{
-        const res = await axios.post(`${API_BASE}/api/user/check`, {},
-        {
-          headers: {
-            Authorization: token
-          },
-        });
-        setIsAuth(true);
-        getProducts();
-      }
-      catch(error){
+      try {
+        const token = document.cookie.replace(
+          /(?:(?:^|.*;\s*)hexTokenWeek2\s*\=\s*([^;]*).*$)|^.*$/,
+          "$1"
+        );
+        axios.defaults.headers.common['Authorization'] = token;
+        const res = await axios.post(`${API_BASE}/v2/api/user/check`, {});
+        if (res.data.success) {    
+          setIsAuth(true);
+          getProducts();
+        }
+      } catch (error) {
         console.log(error);
       }
     })();
   }, []);
-  
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -86,6 +54,9 @@ function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [products, setProducts] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
+  useEffect(()=>{
+    console.log(products);
+  },[products])
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -93,8 +64,10 @@ function App() {
         username: formData.username,
         password: formData.password,
       });
-      const oneMonthInSeconds = 30 * 24 * 60 * 60; // 30 天
-      document.cookie = `hexTokenWeek2=${res.data.token}; max-age=${oneMonthInSeconds}`;
+      document.cookie = `hexTokenWeek2=${res.data.token}; expires=${new Date(res.data.expired)}`;
+
+      axios.defaults.headers.common['Authorization'] = res.data.token;
+
       setIsAuth(true);
       getProducts();
     } catch (error) {
@@ -111,7 +84,13 @@ function App() {
     <>
       {isAuth ? (
         <div className="container">
-          <button type="button" className="btn btn-primary mt-4" onClick={checkLogin}>checkLogin</button>
+          <button
+            type="button"
+            className="btn btn-primary mt-4"
+            onClick={checkLogin}
+          >
+            checkLogin
+          </button>
           <div className="row mt-5">
             <div className="col-md-6">
               <h2>產品列表</h2>
@@ -246,3 +225,30 @@ function App() {
 }
 
 export default App;
+
+// const uploadData = async ()=>{
+//   console.log(API_BASE,API_PATH)
+//   try{
+//     await axios.post(`${API_BASE}/v2/v2/api/${API_PATH}/admin/product`,{
+//       data:{
+//         category: "烤馬鈴薯",
+//         content: "選用上等培根與新鮮馬鈴薯，搭配濃郁的起司，與柔滑的馬鈴薯餡料相得益彰。",
+//         description: "每一口都能品味到培根的煙燻香氣與起司的濃厚風味，完美演繹的經典組合。",
+//         imageUrl: "https://images.unsplash.com/photo-1665931040985-88ceff0fd38e?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+//         imagesUrl: [
+//           "https://images.unsplash.com/photo-1645673197548-9adfa2ea55dc?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+//         ],
+//         is_enabled: 1,
+//         origin_price: 90,
+//         price: 90,
+//         title: "培根起司馬鈴薯",
+//         unit: "份"
+//       }
+//     },
+//     {
+//         //     })
+//  }
+//   catch(err){
+//     console.log(err);
+//   }
+// }
