@@ -15,7 +15,6 @@ function App() {
     const res = await axios.get(
       `${API_BASE}/v2/api/${API_PATH}/admin/products`
     );
-    console.log(res.data);
     setProducts(res.data.products);
   };
 
@@ -34,11 +33,13 @@ function App() {
           /(?:(?:^|.*;\s*)hexTokenWeek2\s*\=\s*([^;]*).*$)|^.*$/,
           "$1"
         );
-        axios.defaults.headers.common['Authorization'] = token;
-        const res = await axios.post(`${API_BASE}/v2/api/user/check`, {});
-        if (res.data.success) {    
-          setIsAuth(true);
-          getProducts();
+        if(token !== ""){
+          axios.defaults.headers.common['Authorization'] = token;
+          const res = await axios.post(`${API_BASE}/v2/api/user/check`, {});
+          if (res.data.success) {    
+            setIsAuth(true);
+            getProducts();
+          }
         }
       } catch (error) {
         console.log(error);
@@ -54,9 +55,6 @@ function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [products, setProducts] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
-  useEffect(()=>{
-    console.log(products);
-  },[products])
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
